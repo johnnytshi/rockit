@@ -8,7 +8,7 @@ const { execSync } = require('child_process');
 const { loadConfig } = require('./config');
 const { detectSystem } = require('./system-detect');
 
-const RESULTS_DIR = path.join(os.homedir(), '.config', 'aibenchy', 'benchmark-results');
+const RESULTS_DIR = path.join(os.homedir(), '.config', 'rockit', 'benchmark-results');
 
 /**
  * Run benchmark in the project environment
@@ -238,7 +238,7 @@ async function listResults() {
   
   if (!fs.existsSync(RESULTS_DIR)) {
     console.log('No benchmark results found yet.');
-    console.log('Run "aibenchy bench" to create your first benchmark.\n');
+    console.log('Run "rockit bench" to create your first benchmark.\n');
     return;
   }
   
@@ -249,7 +249,7 @@ async function listResults() {
   
   if (files.length === 0) {
     console.log('No benchmark results found yet.');
-    console.log('Run "aibenchy bench" to create your first benchmark.\n');
+    console.log('Run "rockit bench" to create your first benchmark.\n');
     return;
   }
   
@@ -339,13 +339,13 @@ async function promptBenchmark() {
   const config = loadConfig();
   
   if (!config.projectPath) {
-    console.error('❌ No project configured. Run "aibenchy python" first to set up a project.');
+    console.error('❌ No project configured. Run "rockit python" first to set up a project.');
     process.exit(1);
   }
   
   if (!fs.existsSync(config.projectPath)) {
     console.error(`❌ Project not found at: ${config.projectPath}`);
-    console.error('Run "aibenchy python" to set up the project.');
+    console.error('Run "rockit python" to set up the project.');
     process.exit(1);
   }
   
@@ -354,7 +354,7 @@ async function promptBenchmark() {
   // Check if PyTorch is installed
   const pyprojectPath = path.join(config.projectPath, 'pyproject.toml');
   if (!fs.existsSync(pyprojectPath)) {
-    console.error('❌ Project not initialized. Run "aibenchy python" first.');
+    console.error('❌ Project not initialized. Run "rockit python" first.');
     process.exit(1);
   }
   
@@ -480,7 +480,7 @@ async function promptBenchmark() {
     console.log(result.output);
     console.error('\n❌ Benchmark failed:', result.error);
     console.error('\nTroubleshooting:');
-    console.error('  1. Make sure PyTorch is installed: aibenchy python');
+    console.error('  1. Make sure PyTorch is installed: rockit python');
     console.error('  2. Check that ROCm is properly configured');
     console.error('  3. Source environment variables: source .env\n');
     

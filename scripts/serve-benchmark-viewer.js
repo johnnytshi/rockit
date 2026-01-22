@@ -5,7 +5,7 @@ const os = require('os');
 
 const PORT = 8080;
 const FRONTEND_DIR = path.join(__dirname, '..', 'frontend');
-const RESULTS_DIR = path.join(os.homedir(), '.config', 'aibenchy', 'benchmark-results');
+const RESULTS_DIR = path.join(os.homedir(), '.config', 'rockit', 'benchmark-results');
 
 const server = http.createServer((req, res) => {
     if (req.url === '/api/results') {

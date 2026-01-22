@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-const RESULTS_DIR = path.join(os.homedir(), '.config', 'aibenchy', 'benchmark-results');
+const RESULTS_DIR = path.join(os.homedir(), '.config', 'rockit', 'benchmark-results');
 
 function parseMatrixResults(output) {
   const results = { matrixMultiplication: [] };

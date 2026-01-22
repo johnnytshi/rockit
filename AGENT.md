@@ -1,4 +1,4 @@
-# AIBenchy – Project Summary and Function Reference
+# Rockit – Project Summary and Function Reference
 
 This document summarizes what’s implemented in the repo, and lists the key functions, what they do, and where any outputs are written.
 
@@ -12,22 +12,22 @@ This document summarizes what’s implemented in the repo, and lists the key fun
 - Utilities to list/nightly builds and reprocess old benchmark results
 - Web-based benchmark result viewer.
 
-Top-level CLI: `bin/aibenchy.js`
-- Commands: `aibenchy rocm`, `aibenchy python`, `aibenchy detect`, `aibenchy config`, `aibenchy bench`, `aibenchy view`
+Top-level CLI: `bin/rockit.js`
+- Commands: `rockit rocm`, `rockit python`, `rockit detect`, `rockit config`, `rockit bench`, `rockit view`
 
 ## Data and output locations
 
 - ROCm install path: `/opt/rocm` (writes `.info/build-info.json` on install)
-- Downloads cache: `~/.cache/aibenchy/`
-- Config file: `~/.config/aibenchy/config.json`
-- Benchmark results: `~/.config/aibenchy/benchmark-results/*.json`
+- Downloads cache: `~/.cache/rockit/`
+- Config file: `~/.config/rockit/config.json`
+- Benchmark results: `~/.config/rockit/benchmark-results/*.json`
 - Project env file (PyTorch): `<your project>/.env`
 
 ---
 
 ## CLI entry point
 
-### `bin/aibenchy.js`
+### `bin/rockit.js`
 - Wires subcommands to their respective modules.
 - Exposes: `rocm`, `python`, `detect`, `config`, `bench`.
 - Output: console output per command; most side effects are delegated to modules below.
@@ -100,7 +100,7 @@ Top-level CLI: `bin/aibenchy.js`
    - Output: version string or null.
 - `promptPyTorchInstallation()`
    - Full interactive flow to select Python version and PyTorch nightly wheels for the detected GPU; initializes a `uv` project if needed; installs torch/vision/audio and optional Flash Attention; writes `.env`.
-   - Output: packages installed into the uv environment at your chosen project path; writes `<project>/.env` and updates `~/.config/aibenchy/config.json`.
+   - Output: packages installed into the uv environment at your chosen project path; writes `<project>/.env` and updates `~/.config/rockit/config.json`.
 
 ### `src/pytorch-installer.js`
 - `isUvInstalled()` → checks for `uv`.
@@ -138,7 +138,7 @@ Top-level CLI: `bin/aibenchy.js`
 ### `src/config.js`
 - `getDefaultConfig()` → default config structure.
 - `loadConfig()` / `saveConfig(config)` / `updateConfig(updates)` / `displayConfig(config)` / `resetConfig()`.
-   - Output: `save/update/reset` write `~/.config/aibenchy/config.json`; `display` prints.
+   - Output: `save/update/reset` write `~/.config/rockit/config.json`; `display` prints.
 
 ---
 
@@ -150,16 +150,16 @@ Top-level CLI: `bin/aibenchy.js`
    - Output: returns `{ success, output }`; temp file is deleted.
 - `listResults()`
    - Interactive selector to view previously saved results.
-   - Output: console display; reads from `~/.config/aibenchy/benchmark-results/`.
+   - Output: console display; reads from `~/.config/rockit/benchmark-results/`.
 - `promptBenchmark()`
    - Interactive runner for: basic torch env check, matrix-mult benchmark (BF16), Flash Attention benchmark (simple), or the comprehensive Flash Attention benchmark. Saves structured results.
-   - Output: writes JSON result files to `~/.config/aibenchy/benchmark-results/`.
+   - Output: writes JSON result files to `~/.config/rockit/benchmark-results/`.
 - `collectSystemMetadata()`
    - Captures OS, CPU, GPU, ROCm build info and installed package versions from config.
    - Output: metadata object embedded in result JSON.
 - `saveResults(benchmarkType, output, metadata)`
    - Serializes benchmark output with parsed sections to a timestamped JSON file.
-   - Output: `~/.config/aibenchy/benchmark-results/<type>_<timestamp>.json`.
+   - Output: `~/.config/rockit/benchmark-results/<type>_<timestamp>.json`.
 - `parseMatrixResults(output)`
    - Parses bf16 GEMM logs into rows with m/n/k, timeMs, TOPS or GFLOPS.
    - Output: `{ matrixMultiplication: [...] }`.
@@ -202,26 +202,26 @@ Top-level CLI: `bin/aibenchy.js`
 
 1) Install and link the CLI
 ```bash
-cd /home/johnny/playground/aibenchy
+cd /home/johnny/playground/rockit
 npm install
 npm link
 ```
 
 2) Commands
 ```bash
-aibenchy detect      # show platform/GPU and compatible ROCm families
-aibenchy rocm        # guided ROCm installer
-aibenchy python      # guided PyTorch + Flash-Attn installer
-aibenchy bench       # run benchmarks and save results
-aibenchy config      # print current config
-aibenchy view        # view benchmark results
+rockit detect      # show platform/GPU and compatible ROCm families
+rockit rocm        # guided ROCm installer
+rockit python      # guided PyTorch + Flash-Attn installer
+rockit bench       # run benchmarks and save results
+rockit config      # print current config
+rockit view        # view benchmark results
 ```
 
 3) Where outputs go
 - `/opt/rocm` – installed ROCm files, with `.info/build-info.json`
-- `~/.cache/aibenchy/` – downloads, temp extracts
-- `~/.config/aibenchy/config.json` – persisted CLI configuration
-- `~/.config/aibenchy/benchmark-results/*.json` – benchmark result snapshots
+- `~/.cache/rockit/` – downloads, temp extracts
+- `~/.config/rockit/config.json` – persisted CLI configuration
+- `~/.config/rockit/benchmark-results/*.json` – benchmark result snapshots
 
 ---
 

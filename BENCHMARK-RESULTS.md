@@ -1,7 +1,7 @@
 # Benchmark Results Storage
 
 ## Overview
-AIBenchy automatically stores all benchmark results with comprehensive metadata in `~/.config/aibenchy/benchmark-results/`.
+Rockit automatically stores all benchmark results with comprehensive metadata in `~/.config/rockit/benchmark-results/`.
 
 ## What's Stored
 
@@ -39,7 +39,7 @@ Examples:
 
 ### Via CLI
 ```bash
-aibenchy bench
+rockit bench
 # Select "View past results" from the menu
 ```
 
@@ -55,13 +55,13 @@ Results are stored as JSON files that can be parsed by any tool:
 
 ```bash
 # List all results
-ls ~/.config/aibenchy/benchmark-results/
+ls ~/.config/rockit/benchmark-results/
 
 # View a specific result
-cat ~/.config/aibenchy/benchmark-results/full_2025-10-30T12-34-56-789Z.json | jq
+cat ~/.config/rockit/benchmark-results/full_2025-10-30T12-34-56-789Z.json | jq
 
 # Compare multiple results
-jq '.parsed.matrixMultiplication' ~/.config/aibenchy/benchmark-results/*.json
+jq '.parsed.matrixMultiplication' ~/.config/rockit/benchmark-results/*.json
 ```
 
 ## Example Result Structure
@@ -78,7 +78,7 @@ See `example-benchmark-result.json` for a complete example of the JSON structure
 
 ## Storage Location
 ```
-~/.config/aibenchy/
+~/.config/rockit/
 ├── config.json              # Current configuration
 └── benchmark-results/       # All benchmark results
     ├── basic_*.json

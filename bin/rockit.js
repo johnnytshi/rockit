@@ -12,7 +12,7 @@ const { promptBenchmark } = require(path.join(__dirname, '..', 'src', 'benchmark
 const program = new Command();
 
 program
-  .name('aibenchy')
+  .name('rockit')
   .description('CLI tool to automate installing ROCm and updating PyTorch')
   .version('1.0.0');
 

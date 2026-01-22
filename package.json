@@ -1,13 +1,13 @@
 {
-  "name": "rocm-pytorch-installer",
+  "name": "rockit",
   "version": "1.0.0",
   "description": "CLI tool to automate installing ROCm and updating PyTorch",
   "main": "src/index.js",
   "bin": {
-    "aibenchy": "./bin/aibenchy.js"
+    "rockit": "./bin/rockit.js"
   },
   "scripts": {
-    "start": "node bin/aibenchy.js install",
+    "start": "node bin/rockit.js install",
     "test": "node src/test-parser.js",
     "detect": "node src/detect-and-list.js",
     "pytorch": "node src/list-pytorch.js"

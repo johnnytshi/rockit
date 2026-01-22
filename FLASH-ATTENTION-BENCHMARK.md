@@ -36,13 +36,13 @@ This benchmark compares different attention implementations for prefill (long co
 ## How to run
 
 ```bash
-# Via aibenchy CLI (recommended)
-aibenchy bench
+# Via rockit CLI (recommended)
+rockit bench
 # Then select: "Flash Attention comprehensive (all implementations)"
 
 # Or directly
 cd <your-pytorch-project>
-uv run python /path/to/aibenchy/src/flash-attention-benchmark.py
+uv run python /path/to/rockit/src/flash-attention-benchmark.py
 ```
 
 ## Output
@@ -75,7 +75,7 @@ WINNERS BY SCENARIO
 
 ## Results storage
 
-Results are saved to: `~/.config/aibenchy/benchmark-results/flash_comprehensive_<timestamp>.json`
+Results are saved to: `~/.config/rockit/benchmark-results/flash_comprehensive_<timestamp>.json`
 
 The JSON includes:
 - Full console output

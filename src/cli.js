@@ -97,7 +97,7 @@ function checkCurrentRocm() {
 }
 
 async function promptInstallation() {
-  console.log('\n🚀 AIBenchy - ROCm Installation Tool\n');
+  console.log('\n🚀 Rockit - ROCm Installation Tool\n');
   
   // Check current ROCm installation
   const currentRocm = checkCurrentRocm();
@@ -283,7 +283,7 @@ async function promptInstallation() {
   // Step 7: Download
   console.log('\n=== Step 4: Downloading ROCm ===');
   
-  const downloadDir = path.join(process.env.HOME, '.cache', 'aibenchy');
+  const downloadDir = path.join(process.env.HOME, '.cache', 'rockit');
   if (!fs.existsSync(downloadDir)) {
     fs.mkdirSync(downloadDir, { recursive: true });
   }

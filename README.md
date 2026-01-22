@@ -1,4 +1,4 @@
-# AIBenchy 🚀
+# Rockit 🚀 - ROCm Toolkit for Linux
 
 One CLI to set up AMD ROCm + PyTorch nightlies and run quick benchmarks. Fun, fast, and focused on AMD GPUs.
 
@@ -14,19 +14,19 @@ npm install
 npm link
 
 # 2) Detect your system
-aibenchy detect
+rockit detect
 
 # 3) Install ROCm (interactive, uses sudo for /opt/rocm)
-aibenchy rocm
+rockit rocm
 
 # 4) Install PyTorch for AMD ROCm (interactive)
-aibenchy python
+rockit python
 
 # 5) Run benchmarks and save results
-aibenchy bench
+rockit bench
 
 # 6) View benchmark results
-aibenchy view
+rockit view
 ```
 
 That’s it. The tool guides you with friendly prompts and sensible defaults.
@@ -43,9 +43,9 @@ That’s it. The tool guides you with friendly prompts and sensible defaults.
 ## Where things go
 
 - ROCm install: `/opt/rocm` (writes `.info/build-info.json`)
-- Download cache: `~/.cache/aibenchy/`
-- CLI config: `~/.config/aibenchy/config.json`
-- Benchmark results: `~/.config/aibenchy/benchmark-results/*.json`
+- Download cache: `~/.cache/rockit/`
+- CLI config: `~/.config/rockit/config.json`
+- Benchmark results: `~/.config/rockit/benchmark-results/*.json`
 - Project env file: `<your-project>/.env`
 
 ## Requirements
@@ -58,12 +58,12 @@ Tip: If you use fish shell, the tool prints fish-friendly env exports as well.
 
 ## Commands cheat sheet
 
-- `aibenchy detect` — Show platform, GPU arch, and ROCm compatibility
-- `aibenchy rocm` — Guided ROCm install (download → backup → install → verify)
-- `aibenchy python` — Guided PyTorch/Flash-Attn install for AMD ROCm nightlies
-- `aibenchy bench` — Run basic GPU checks and small benchmarks; saves JSON
-- `aibenchy config` — Print current config
-- `aibenchy view` — Starts a web server to view benchmark results.
+- `rockit detect` — Show platform, GPU arch, and ROCm compatibility
+- `rockit rocm` — Guided ROCm install (download → backup → install → verify)
+- `rockit python` — Guided PyTorch/Flash-Attn install for AMD ROCm nightlies
+- `rockit bench` — Run basic GPU checks and small benchmarks; saves JSON
+- `rockit config` — Print current config
+- `rockit view` — Starts a web server to view benchmark results.
 
 ## Friendly notes
 

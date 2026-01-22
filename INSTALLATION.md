@@ -1,10 +1,10 @@
 ## Installation Demo
 
-Here's what you'll see when you run `aibenchy install`:
+Here's what you'll see when you run `rockit install`:
 
 ### 1. System Detection
 ```
-🚀 AIBenchy - ROCm Installation Tool
+🚀 Rockit - ROCm Installation Tool
 
 === Step 1: Detecting Your System ===
 
@@ -142,18 +142,18 @@ Next steps:
 
 ```bash
 # Run the installer
-aibenchy install
+rockit install
 
 # Check your system
-aibenchy detect
+rockit detect
 
 # Get help
-aibenchy --help
+rockit --help
 ```
 
 ## Notes
 
 - The installer requires **sudo** access to install to `/opt/rocm`
-- Downloads are cached in `~/.cache/aibenchy` for reuse
+- Downloads are cached in `~/.cache/rockit` for reuse
 - Existing ROCm installations are backed up before installing
 - File sizes vary from 1GB to 5GB depending on the build
