@@ -31,9 +31,12 @@ program
 program
   .command('python')
   .description('Install or update PyTorch with ROCm support')
-  .action(async () => {
+  .argument('[path]', 'Project directory path (defaults to current directory)')
+  .action(async (pathArg) => {
     try {
-      await promptPyTorchInstallation();
+      // Determine project path: use CLI arg if provided, else current directory
+      const projectPath = pathArg ? path.resolve(pathArg) : process.cwd();
+      await promptPyTorchInstallation(projectPath);
     } catch (error) {
       console.error('Error:', error.message);
       process.exit(1);

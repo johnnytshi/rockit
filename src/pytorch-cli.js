@@ -65,7 +65,7 @@ function checkCurrentRocm() {
   return version;
 }
 
-async function promptPyTorchInstallation() {
+async function promptPyTorchInstallation(projectPath) {
   console.log('\n🔥 AIBenchy - PyTorch Installation Tool\n');
   
   // Step 1: Check prerequisites
@@ -113,24 +113,10 @@ async function promptPyTorchInstallation() {
   // Update auto-detected values
   config.gpuArch = systemInfo.gpuArch;
   config.rocmVersion = rocmVersion;
-  
-  // Prompt for project path
-  const { projectPath } = await inquirer.prompt([
-    {
-      type: 'input',
-      name: 'projectPath',
-      message: 'Project directory path:',
-      default: config.projectPath,
-      validate: (input) => {
-        if (!input || input.trim() === '') {
-          return 'Project path is required';
-        }
-        return true;
-      }
-    }
-  ]);
-  
-  config.projectPath = path.resolve(projectPath);
+
+  // Use provided project path (already resolved to absolute in CLI)
+  config.projectPath = projectPath;
+  console.log(`Using project path: ${config.projectPath}`);
   
   // Check if project exists
   const projectExists = isProjectInitialized(config.projectPath);
@@ -429,7 +415,8 @@ module.exports = { promptPyTorchInstallation };
 
 // Run if called directly
 if (require.main === module) {
-  promptPyTorchInstallation().catch(error => {
+  const projectPath = process.argv[2] ? path.resolve(process.argv[2]) : process.cwd();
+  promptPyTorchInstallation(projectPath).catch(error => {
     console.error('\n❌ Error:', error.message);
     process.exit(1);
   });
