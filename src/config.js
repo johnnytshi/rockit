@@ -11,6 +11,7 @@ const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
  */
 function getDefaultConfig() {
   return {
+    packageManager: null, // 'uv' or 'pip'
     projectPath: path.join(os.homedir(), 'pytorch-projects'),
     pythonVersion: null, // Will be auto-detected
     gpuArch: null, // Will be auto-detected
@@ -83,18 +84,19 @@ function updateConfig(updates) {
  */
 function displayConfig(config) {
   console.log('\n=== Current Configuration ===\n');
+  console.log(`Package Manager: ${config.packageManager || 'Not set'}`);
   console.log(`Project Path: ${config.projectPath}`);
   console.log(`Python Version: ${config.pythonVersion || 'Not set'}`);
   console.log(`GPU Architecture: ${config.gpuArch || 'Not detected'}`);
   console.log(`ROCm Version: ${config.rocmVersion || 'Not installed'}`);
-  
+
   console.log('\nInstalled Packages:');
   const pkgs = config.installedPackages;
   console.log(`  torch: ${pkgs.torch || 'Not installed'}`);
   console.log(`  torchvision: ${pkgs.torchvision || 'Not installed'}`);
   console.log(`  torchaudio: ${pkgs.torchaudio || 'Not installed'}`);
   console.log(`  flash-attn: ${pkgs['flash-attn'] || 'Not installed'}`);
-  
+
   if (config.lastUpdated) {
     console.log(`\nLast Updated: ${new Date(config.lastUpdated).toLocaleString()}`);
   }

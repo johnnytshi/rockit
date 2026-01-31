@@ -36,6 +36,7 @@ That’s it. The tool guides you with friendly prompts and sensible defaults.
 - Auto-detect AMD GPU + compatible ROCm families
 - Pick from ROCm nightly builds and install to `/opt/rocm`
 - Set up a Python project with AMD ROCm nightly wheels (torch/vision/audio)
+- **Choose your package manager**: `uv` (fast, recommended) or `pip` (standard)
 - Optional Flash Attention install
 - Simple performance benchmarks that save JSON snapshots
 - A web-based viewer to visualize and compare benchmark results.
@@ -52,17 +53,30 @@ That’s it. The tool guides you with friendly prompts and sensible defaults.
 
 - AMD GPU with ROCm support (RDNA/CDNA, e.g., gfx10xx/gfx11xx/gfx9x)
 - Linux, with sudo access for installing to `/opt/rocm`
-- Python tooling: we use `uv` inside the Python flow
+- Python package manager: `uv` (recommended) or `pip`
+  - Install uv: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+  - pip: Usually comes with Python
 
 Tip: If you use fish shell, the tool prints fish-friendly env exports as well.
+
+## Package Manager Support
+
+Rockit supports both `uv` and `pip` for Python dependency management:
+
+- **uv** (recommended): Faster, more reliable, handles Python versions automatically
+- **pip**: Standard Python package manager, works with existing venv setups
+
+The tool will prompt you to select your preferred package manager on first use. For existing projects, it automatically detects which package manager was used. See [PACKAGE_MANAGER_SUPPORT.md](PACKAGE_MANAGER_SUPPORT.md) for details.
 
 ## Commands cheat sheet
 
 - `rockit detect` — Show platform, GPU arch, and ROCm compatibility
 - `rockit rocm` — Guided ROCm install (download → backup → install → verify)
-- `rockit python` — Guided PyTorch/Flash-Attn install for AMD ROCm nightlies
+- `rockit python [path]` — Guided PyTorch/Flash-Attn install for AMD ROCm nightlies
+  - Prompts for package manager selection (uv or pip)
+  - Auto-detects existing project setup
 - `rockit bench` — Run basic GPU checks and small benchmarks; saves JSON
-- `rockit config` — Print current config
+- `rockit config` — Print current config (includes selected package manager)
 - `rockit view` — Starts a web server to view benchmark results.
 
 ## Friendly notes

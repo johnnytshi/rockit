@@ -7,6 +7,7 @@ const os = require('os');
 const { execSync } = require('child_process');
 const { loadConfig } = require('./config');
 const { detectSystem } = require('./system-detect');
+const { createPackageManager } = require('./package-managers/factory');
 
 const RESULTS_DIR = path.join(os.homedir(), '.config', 'rockit', 'benchmark-results');
 
@@ -14,22 +15,26 @@ const RESULTS_DIR = path.join(os.homedir(), '.config', 'rockit', 'benchmark-resu
  * Run benchmark in the project environment
  * @param {string} projectPath - Path to project directory
  * @param {string} benchmarkScript - Python code to run
+ * @param {string} packageManager - Package manager to use ('uv' or 'pip')
  * @returns {Promise<Object>} Benchmark results
  */
-async function runBenchmark(projectPath, benchmarkScript) {
+async function runBenchmark(projectPath, benchmarkScript, packageManager = 'uv') {
   const scriptPath = path.join(projectPath, '.benchmark_temp.py');
-  
+
   try {
     // Write benchmark script to temp file
     fs.writeFileSync(scriptPath, benchmarkScript);
-    
-    // Run with uv
-    const output = execSync(`uv run python ${scriptPath}`, {
+
+    // Get the appropriate Python command
+    const pkgManager = createPackageManager(packageManager);
+    const pythonCmd = pkgManager.runPythonCommand(projectPath, scriptPath);
+
+    const output = execSync(pythonCmd, {
       cwd: projectPath,
       encoding: 'utf8',
       stdio: 'pipe'
     });
-    
+
     return { success: true, output };
   } catch (error) {
     return { success: false, error: error.message, output: error.stdout || '' };
@@ -417,8 +422,12 @@ async function promptBenchmark() {
   console.log('\n📊 Collecting system metadata...');
   const metadata = collectSystemMetadata();
   
+  // Get package manager from config (default to uv for backward compatibility)
+  const packageManager = config.packageManager || 'uv';
+  const pkgManager = createPackageManager(packageManager);
+
   let result;
-  
+
   if (useExternalScript) {
     // Run the comprehensive benchmark script directly
     const comprehensiveScriptPath = path.join(__dirname, 'flash-attention-benchmark.py');
@@ -426,9 +435,10 @@ async function promptBenchmark() {
       console.error('❌ Comprehensive benchmark script not found:', comprehensiveScriptPath);
       process.exit(1);
     }
-    
+
     try {
-      const output = execSync(`uv run python ${comprehensiveScriptPath}`, {
+      const pythonCmd = pkgManager.runPythonCommand(config.projectPath, comprehensiveScriptPath);
+      const output = execSync(pythonCmd, {
         cwd: config.projectPath,
         encoding: 'utf8',
         stdio: 'pipe'
@@ -438,7 +448,7 @@ async function promptBenchmark() {
       result = { success: false, error: error.message, output: error.stdout || '' };
     }
   } else {
-    result = await runBenchmark(config.projectPath, script);
+    result = await runBenchmark(config.projectPath, script, packageManager);
   }
   
   if (result.success) {
@@ -453,13 +463,14 @@ async function promptBenchmark() {
     if (runComprehensiveAfter) {
       console.log('\n🚀 Running comprehensive Flash Attention benchmark...\n');
       console.log('─'.repeat(60));
-      
+
       const comprehensiveScriptPath = path.join(__dirname, 'flash-attention-benchmark.py');
       if (!fs.existsSync(comprehensiveScriptPath)) {
         console.error('❌ Comprehensive benchmark script not found:', comprehensiveScriptPath);
       } else {
         try {
-          const comprehensiveOutput = execSync(`uv run python ${comprehensiveScriptPath}`, {
+          const pythonCmd = pkgManager.runPythonCommand(config.projectPath, comprehensiveScriptPath);
+          const comprehensiveOutput = execSync(pythonCmd, {
             cwd: config.projectPath,
             encoding: 'utf8',
             stdio: 'pipe'

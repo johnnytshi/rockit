@@ -4,8 +4,8 @@ const inquirer = require('inquirer');
 const path = require('path');
 const fs = require('fs');
 const { detectSystem } = require('./system-detect');
-const { 
-  parsePyTorchPackages, 
+const {
+  parsePyTorchPackages,
   filterByPythonVersion,
   filterByPlatform,
   getAvailablePythonVersions,
@@ -15,15 +15,14 @@ const {
   fetchPyPiVersions
 } = require('./pypi-parser');
 const {
-  isUvInstalled,
   getPythonVersion,
-  initializeUvProject,
-  installPyTorchPackages,
-  updatePyTorchPackages,
-  isProjectInitialized,
-  getInstalledPackages,
   setupEnvironmentVariables
 } = require('./pytorch-installer');
+const {
+  createPackageManager,
+  getAvailableManagers,
+  detectProjectPackageManager
+} = require('./package-managers/factory');
 const {
   loadConfig,
   saveConfig,
@@ -67,30 +66,94 @@ function checkCurrentRocm() {
 
 async function promptPyTorchInstallation(projectPath) {
   console.log('\n🔥 AIBenchy - PyTorch Installation Tool\n');
-  
-  // Step 1: Check prerequisites
-  console.log('=== Step 1: Checking Prerequisites ===\n');
-  
-  // Check uv
-  if (!isUvInstalled()) {
-    console.error('❌ uv is not installed.');
-    console.log('\nInstall uv with:');
-    console.log('  curl -LsSf https://astral.sh/uv/install.sh | sh');
-    console.log('  or: pip install uv\n');
+
+  // Step 1: Package Manager Selection
+  console.log('=== Step 1: Package Manager Selection ===\n');
+
+  const availableManagers = getAvailableManagers();
+
+  if (availableManagers.length === 0) {
+    console.error('❌ No supported package manager found.');
+    console.log('\nInstall one of:');
+    console.log('  • uv: curl -LsSf https://astral.sh/uv/install.sh | sh');
+    console.log('  • pip: Usually comes with Python\n');
     process.exit(1);
   }
-  console.log('✅ uv is installed');
-  
+
+  let config = loadConfig();
+  let selectedManager;
+  let pkgManager;
+
+  // Check if project already exists and detect its package manager
+  const existingProjectManager = detectProjectPackageManager(projectPath);
+
+  if (existingProjectManager) {
+    // Project exists with a package manager
+    selectedManager = existingProjectManager;
+    console.log(`Detected existing project using: ${selectedManager}`);
+
+    // Check if user's config preference differs
+    if (config.packageManager && config.packageManager !== existingProjectManager) {
+      console.log(`⚠️  Your config prefers ${config.packageManager}, but project uses ${existingProjectManager}`);
+      const { action } = await inquirer.prompt([{
+        type: 'list',
+        name: 'action',
+        message: 'How would you like to proceed?',
+        choices: [
+          { name: `Continue with ${existingProjectManager} (recommended)`, value: 'keep' },
+          { name: `Reinitialize with ${config.packageManager}`, value: 'reinit' },
+          { name: 'Cancel', value: 'cancel' }
+        ],
+        default: 'keep'
+      }]);
+
+      if (action === 'cancel') {
+        console.log('\nCancelled.');
+        process.exit(0);
+      } else if (action === 'reinit') {
+        selectedManager = config.packageManager;
+        console.log(`Will reinitialize project with ${selectedManager}`);
+      }
+    }
+  } else if (config.packageManager && availableManagers.includes(config.packageManager)) {
+    // Use configured package manager
+    selectedManager = config.packageManager;
+    console.log(`Using configured package manager: ${selectedManager}`);
+  } else {
+    // Prompt for selection
+    const { packageManager } = await inquirer.prompt([{
+      type: 'list',
+      name: 'packageManager',
+      message: 'Select package manager:',
+      choices: availableManagers.map(m => ({
+        name: m === 'uv'
+          ? 'uv (recommended - faster and more reliable)'
+          : 'pip (standard Python package manager)',
+        value: m
+      })),
+      default: availableManagers.includes('uv') ? 'uv' : availableManagers[0]
+    }]);
+    selectedManager = packageManager;
+  }
+
+  config.packageManager = selectedManager;
+  pkgManager = createPackageManager(selectedManager);
+  console.log(`✅ Using ${selectedManager}`);
+
+
+  // Step 2: Check system prerequisites
+  console.log('\n=== Step 2: System Detection ===\n');
+
   // Detect system
   const systemInfo = detectSystem();
   console.log(`✅ Platform: ${systemInfo.platform}`);
-  
+
   if (!systemInfo.detected) {
     console.error('❌ No AMD GPU detected');
     process.exit(1);
   }
   console.log(`✅ GPU: ${systemInfo.gpuArch}`);
-  
+
   // Check ROCm
   const rocmVersion = checkCurrentRocm();
   if (rocmVersion) {
@@ -98,17 +161,15 @@ async function promptPyTorchInstallation(projectPath) {
   } else {
     console.log('⚠️  ROCm not detected (optional)');
   }
-  
+
   // Get Python version
   const systemPythonVersion = getPythonVersion();
   if (systemPythonVersion) {
     console.log(`✅ Python: ${systemPythonVersion}`);
   }
-  
-  // Step 2: Load or create config
-  console.log('\n=== Step 2: Configuration ===\n');
-  
-  let config = loadConfig();
+
+  // Step 3: Load or create config
+  console.log('\n=== Step 3: Configuration ===\n');
   
   // Update auto-detected values
   config.gpuArch = systemInfo.gpuArch;
@@ -117,16 +178,21 @@ async function promptPyTorchInstallation(projectPath) {
   // Use provided project path (already resolved to absolute in CLI)
   config.projectPath = projectPath;
   console.log(`Using project path: ${config.projectPath}`);
-  
+
   // Check if project exists
-  const projectExists = isProjectInitialized(config.projectPath);
+  const projectExists = pkgManager.isProjectInitialized(config.projectPath);
   
   if (projectExists) {
     console.log(`\n✅ Project found at: ${config.projectPath}`);
     
     // Get installed packages
     try {
-      const installed = getInstalledPackages(config.projectPath);
+      const installedList = await pkgManager.listInstalledPackages(config.projectPath);
+      const installed = {};
+      installedList.forEach(pkg => {
+        installed[pkg.name] = pkg.version;
+      });
+
       if (installed.torch) {
         console.log(`   torch: ${installed.torch}`);
         config.installedPackages.torch = installed.torch;
@@ -165,8 +231,8 @@ async function promptPyTorchInstallation(projectPath) {
     console.log(`\n📁 New project will be created at: ${config.projectPath}`);
   }
   
-  // Step 3: Select Python version
-  console.log('\n=== Step 3: Fetching Available Packages ===\n');
+  // Step 4: Select Python version
+  console.log('\n=== Step 4: Fetching Available Packages ===\n');
   
   const allPackages = await parsePyTorchPackages(config.gpuArch);
   
@@ -228,9 +294,9 @@ async function promptPyTorchInstallation(projectPath) {
   
   // Group and sort packages
   const grouped = groupPackagesByName(compatiblePackages);
-  
-  // Step 4: Select versions for each package
-  console.log('=== Step 4: Select Package Versions ===\n');
+
+  // Step 5: Select versions for each package
+  console.log('=== Step 5: Select Package Versions ===\n');
   
   const packagesToInstall = [];
   const packageNames = ['torch', 'torchvision', 'torchaudio'];
@@ -281,7 +347,7 @@ async function promptPyTorchInstallation(projectPath) {
     }
   }
   
-  // Step 5: Flash Attention option
+  // Step 6: Flash Attention option
   const { installFlashAttn } = await inquirer.prompt([
     {
       type: 'confirm',
@@ -340,8 +406,9 @@ async function promptPyTorchInstallation(projectPath) {
     }
   }
   
-  // Step 6: Confirm installation
+  // Step 7: Confirm installation
   console.log('\n=== Installation Summary ===\n');
+  console.log(`Package Manager: ${selectedManager}`);
   console.log(`Project Path: ${config.projectPath}`);
   console.log(`Python Version: ${pythonVersion}`);
   console.log(`GPU: ${config.gpuArch}`);
@@ -370,45 +437,52 @@ async function promptPyTorchInstallation(projectPath) {
     process.exit(0);
   }
   
-  // Step 7: Initialize project if needed
+  // Step 8: Initialize project if needed
   if (!projectExists) {
-    console.log('\n=== Step 5: Initializing Project ===');
-    initializeUvProject(config.projectPath, pythonVersion);
+    console.log('\n=== Step 8: Initializing Project ===');
+    await pkgManager.initializeProject(config.projectPath, pythonVersion);
   }
-  
-  // Step 8: Install packages
-  const success = await installPyTorchPackages(
+
+  // Step 9: Install packages
+  const success = await pkgManager.installPackages(
     config.projectPath,
     config.gpuArch,
     packagesToInstall,
     { installFlashAttn, flashAttnVersion }
   );
-  
+
   if (!success) {
     console.error('\n❌ Installation failed');
     process.exit(1);
   }
-  
-  // Step 9: Setup environment variables
+
+  // Step 10: Setup environment variables
   setupEnvironmentVariables(config.projectPath, { hasFlashAttn: installFlashAttn });
-  
-  // Step 10: Update config
+
+  // Step 11: Update config
   packagesToInstall.forEach(pkg => {
     config.installedPackages[pkg.name] = pkg.version;
   });
-  
+
   if (installFlashAttn) {
     config.installedPackages['flash-attn'] = flashAttnVersion;
   }
-  
+
   saveConfig(config);
-  
+
   console.log('\n✨ Installation complete! ✨\n');
   console.log('Next steps:');
   console.log(`  1. cd ${config.projectPath}`);
-  console.log(`  2. Source environment variables: source .env`);
-  console.log(`  3. uv run python`);
-  console.log(`  4. import torch; print(torch.cuda.is_available())\n`);
+  console.log(`  2. source .env`);
+
+  if (selectedManager === 'uv') {
+    console.log(`  3. uv run python`);
+    console.log(`  4. import torch; print(torch.cuda.is_available())\n`);
+  } else {
+    console.log(`  3. source .venv/bin/activate`);
+    console.log(`  4. python`);
+    console.log(`  5. import torch; print(torch.cuda.is_available())\n`);
+  }
 }
 
 module.exports = { promptPyTorchInstallation };
